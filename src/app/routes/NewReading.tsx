@@ -1,10 +1,5 @@
-import Eyebrow from '@/design-system/components/Eyebrow';
-import { RouteStub } from './_stub';
+import NewReadingSheet from '@/features/new-reading/NewReadingSheet';
 
 export default function NewReading() {
-  return (
-    <RouteStub>
-      <Eyebrow>NEW READING · TBD</Eyebrow>
-    </RouteStub>
-  );
+  return <NewReadingSheet />;
 }

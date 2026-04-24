@@ -1,22 +1,31 @@
-import { useEffect, useMemo, type CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { useReaderStore } from '@/core/reader-engine/store';
-import { tokenize } from '@/core/reader-engine/tokenize';
-import { MARCUS_AURELIUS_PASSAGE } from '@/core/reader-engine/samples';
+import type { ReaderToken } from '@/core/reader-engine/types';
+import { updateProgress } from '@/core/persistence/texts';
 import ReaderWord from '@/design-system/components/ReaderWord';
 import GuideLines from '@/design-system/components/GuideLines';
 import GestureLayer from './GestureLayer';
 
 /**
  * Full /reader surface. Wires the engine store to ReaderWord +
- * GuideLines + gesture handlers.
+ * GuideLines + gesture handlers. Accepts tokens + optional textId
+ * from the route loader so playback decouples from the text source.
  *
- * S02 uses a hardcoded sample; S03 replaces the sample import with
- * a Dexie-backed text lookup keyed by route param.
+ * When textId is provided, progress writes are debounced (200 ms) and
+ * persist to Dexie via updateProgress so the user resumes across
+ * sessions.
  *
- * See `.gsd/milestones/M001/slices/S02/tasks/T04-PLAN.md`.
+ * See `.gsd/milestones/M001/slices/S03/S03-PLAN.md`.
  */
 
 const DEFAULT_WPM = 350;
+const PROGRESS_WRITE_DEBOUNCE_MS = 200;
+
+export interface ReaderViewProps {
+  tokens: ReaderToken[];
+  textId?: string;
+  startIndex?: number;
+}
 
 function formatRemaining(index: number, totalTokens: number, wpm: number): string {
   const remaining = Math.max(totalTokens - index, 0);
@@ -26,7 +35,7 @@ function formatRemaining(index: number, totalTokens: number, wpm: number): strin
   return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
 }
 
-export default function ReaderView() {
+export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderViewProps) {
   const index = useReaderStore((s) => s.index);
   const isPlaying = useReaderStore((s) => s.isPlaying);
   const totalTokens = useReaderStore((s) => s.totalTokens);
@@ -34,19 +43,37 @@ export default function ReaderView() {
   const progress = useReaderStore((s) => s.progress);
   const initEngine = useReaderStore((s) => s.initEngine);
   const destroyEngine = useReaderStore((s) => s.destroyEngine);
+  const seek = useReaderStore((s) => s.seek);
   const play = useReaderStore((s) => s.play);
   const pause = useReaderStore((s) => s.pause);
   const jump = useReaderStore((s) => s.jump);
 
-  const tokens = useMemo(() => tokenize(MARCUS_AURELIUS_PASSAGE), []);
+  const progressWriteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     initEngine(tokens, { wpm: DEFAULT_WPM, punctuationPauses: true }, () => {
-      // S06 will transition to Completion; S02 logs for visibility.
+      // S06 will transition to Completion; S03 logs for visibility.
       console.info('[Pace] reader finished');
     });
+    if (startIndex > 0) seek(startIndex);
     return () => destroyEngine();
-  }, [tokens, initEngine, destroyEngine]);
+  }, [tokens, initEngine, destroyEngine, seek, startIndex]);
+
+  // Persist progress — debounced so we don't thrash IndexedDB during fast playback.
+  useEffect(() => {
+    if (!textId) return;
+    if (progressWriteTimer.current !== null) {
+      clearTimeout(progressWriteTimer.current);
+    }
+    progressWriteTimer.current = setTimeout(() => {
+      void updateProgress(textId, index);
+    }, PROGRESS_WRITE_DEBOUNCE_MS);
+    return () => {
+      if (progressWriteTimer.current !== null) {
+        clearTimeout(progressWriteTimer.current);
+      }
+    };
+  }, [textId, index]);
 
   useEffect(() => {
     function handleVisibility() {

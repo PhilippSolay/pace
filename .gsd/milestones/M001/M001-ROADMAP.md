@@ -20,8 +20,8 @@
 - [x] **S02: Reader Engine + Reader View** `risk:high` `depends:[S01]` *(done 2026-04-25 — see S02-SUMMARY.md)*
   > After this: `/reader` plays the hardcoded Marcus Aurelius passage at 350 WPM with correct pin placement, glow, and guide lines; tap toggles play/pause; swipe left/right jumps ±5 words. (Brief Phase 1 exit criteria.)
 
-- [ ] **S03: Welcome + Library + Paste + Persistence** `risk:medium` `depends:[S02]`
-  > After this: first visit shows Welcome (anonymous path works; Apple/email stubs show "coming soon" toast); on second visit Welcome is skipped; paste a text from the New Reading sheet; it appears in Library with meta; tap to read; reload the page; resume from the last word.
+- [x] **S03: Welcome + Library + Paste + Persistence** `risk:medium` `depends:[S02]` *(done 2026-04-25 — see S03-SUMMARY.md)*
+  > After this: first visit shows Welcome (all 3 buttons route to anonymous-start per D022); on second visit Welcome is skipped; paste a text from the New Reading sheet; it appears in Library with meta; tap to read; reload the page; resume from the last word.
 
 - [ ] **S04: PDF Upload + Text Processing** `risk:medium` `depends:[S03]`
   > After this: pick a text-based PDF via the New Reading sheet; it parses (pdfjs-dist), de-hyphenates line breaks, strips repeated headers/footers and page numbers, saves to Library, and reads correctly. Scanned-PDF rejection shows a user-friendly error.
