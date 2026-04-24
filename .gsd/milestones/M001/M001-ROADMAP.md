@@ -23,17 +23,17 @@
 - [x] **S03: Welcome + Library + Paste + Persistence** `risk:medium` `depends:[S02]` *(done 2026-04-25 — see S03-SUMMARY.md)*
   > After this: first visit shows Welcome (all 3 buttons route to anonymous-start per D022); on second visit Welcome is skipped; paste a text from the New Reading sheet; it appears in Library with meta; tap to read; reload the page; resume from the last word.
 
-- [ ] **S04: PDF Upload + Text Processing** `risk:medium` `depends:[S03]`
-  > After this: pick a text-based PDF via the New Reading sheet; it parses (pdfjs-dist), de-hyphenates line breaks, strips repeated headers/footers and page numbers, saves to Library, and reads correctly. Scanned-PDF rejection shows a user-friendly error.
+- [x] **S04: PDF Upload + Text Processing** `risk:medium` `depends:[S03]` *(done 2026-04-25 — squash `2c6ec58`)*
+  > After this: pick a text-based PDF via the New Reading sheet; it parses (pdfjs-dist, route-lazy-loaded), de-hyphenates line breaks, strips repeated headers/footers and page numbers, saves to Library, and reads correctly. Scanned-PDF rejection shows a user-friendly error.
 
-- [ ] **S05: Standalone Settings Screen + In-Session Drawer** `risk:low` `depends:[S02, S03]`
-  > After this: Library gear opens Settings with all sections (§6.7); reader bottom-edge swipe opens a two-knob drawer (speed, size, pin color); all preferences persist live to Dexie and apply immediately.
+- [x] **S05: Standalone Settings Screen + In-Session Drawer** `risk:low` `depends:[S02, S03]` *(done 2026-04-25 — squash `69c8b6b`)*
+  > After this: Library gear opens Settings with all sections (§6.7 minus Account per D032); reader bottom-edge swipe opens a two-knob drawer (speed, size, pin color); all preferences persist live to Dexie and apply immediately.
 
-- [ ] **S06: Completion + Haptics + Accessibility** `risk:low` `depends:[S02]`
-  > After this: finishing a text auto-transitions to the Completion screen showing Pace/Time/Words/Text stats; `navigator.vibrate` fires on play/pause/paragraph/finish where supported; `prefers-reduced-motion` disables glow + paragraph fade + non-completion haptics; screen-reader fallback reads the full text via `SpeechSynthesisUtterance`.
+- [x] **S06: Completion + Haptics + Accessibility** `risk:low` `depends:[S02]` *(done 2026-04-25 — squash `3feb981`)*
+  > After this: finishing a text auto-transitions to the Completion screen showing Pace/Time/Words/Text stats; `navigator.vibrate` fires on play/pause/paragraph/finish where supported; `prefers-reduced-motion` disables non-completion haptics; RSVP/screen-reader incompatibility surfaced honestly per D033 (no SpeechSynthesis fallback in v1).
 
-- [ ] **S07: PWA Install + Share Target + Deploy** `risk:medium` `depends:[S03, S04]`
-  > After this: installable to home screen on iOS Safari + Android Chrome with correct icons; shared text or PDF from another app lands in the Paste/PDF flow via Web Share Target; Dockerfile + nginx.conf + Traefik compose entry deployed to `pace.solay.cloud`; HTTPS via Let's Encrypt; first Lighthouse run ≥ 90 on PWA + ≥ 85 on Performance.
+- [x] **S07: PWA Install + Share Target + Deploy** `risk:medium` `depends:[S03, S04]` *(done 2026-04-25 — squash `4558dbe`)*
+  > After this: installable to home screen on iOS Safari + Android Chrome with wordmark icons; GET-based share target captures text/url shares and prefills the Paste Text view; Dockerfile + nginx.conf + compose.yml + DEPLOY.md ready for `pace.solay.cloud` VPS deploy via Traefik + Let's Encrypt. POST/multipart file-share deferred to v2 injectManifest refactor.
 
 ---
 
