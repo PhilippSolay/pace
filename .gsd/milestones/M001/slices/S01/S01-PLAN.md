@@ -1,60 +1,49 @@
 # S01: Scaffold + Design System + Router
 
-**Goal:** Buildable Vite + React + TypeScript project with PWA plugin configured, design-system tokens wired as CSS variables, Google Fonts loading, React Router shell with stubbed routes, and a specimen route (`/_ds`) that renders every color swatch and typography style.
+**Goal:** Buildable Vite + React + TypeScript project with PWA plugin configured, design-system tokens wired as CSS variables, Google Fonts loading, React Router shell with stubbed routes, and a working `Wordmark` + `Eyebrow` primitive.
 
-**Demo:** `npm run dev` serves the app at `http://localhost:5173/_ds` with every color swatch labeled, every typeface rendering its sample string, and the "Pace." wordmark correct. `npm run build` produces a `dist/` bundle; `npm run preview` serves it. Lighthouse PWA category ≥ 50 (full 90+ score waits for S07).
+**Demo:** `npm run dev` serves the app at `localhost:5173/` rendering the Pace wordmark in Fraunces. `/library` and `/reader` each render a one-liner stub. `npm run build` exits 0; `dist/sw.js` + `dist/manifest.webmanifest` exist. No throwaway specimen route — tokens are proven by their use in real routes.
 
 ## Must-Haves
 
-- Vite 5 + TypeScript 5 strict + React 18 + vite-plugin-pwa installed and configured
-- `tsconfig.json` with `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`
-- `src/design-system/tokens.css` exposing all 11 color variables + 5 radii + 4 font variables from brief §10
-- `index.html` linking the Google Fonts CSS with all 10 families (EB Garamond, Fraunces, Inter, JetBrains Mono, Spectral, Lora, Crimson Pro, Manrope, IBM Plex Mono, Newsreader)
-- React Router 6 with stub routes: `/` (Welcome placeholder), `/library`, `/new`, `/reader`, `/reader/:id`, `/settings`, `/completion/:id`, `/_ds`
-- `/_ds` specimen page renders all design tokens — throwaway, removed in a later slice
-- `manifest.webmanifest` generated with correct name, short_name, theme_color, background_color, start_url
-- `npm run build` exits 0 with zero type errors and zero lint errors
-- Placeholder 192/512 PNG icons (auto-generated via plugin from a single SVG source)
-- `Wordmark` component rendering "Pace." with accent italic light period — used on every screen
-- `.editorconfig`, `.eslintrc.cjs`, `.prettierrc`, `.nvmrc` (Node 20)
+- Vite 5 + React 18 + TypeScript 5 strict + vite-plugin-pwa (✓ done in T01)
+- `src/design-system/tokens.css` with all 11 color variables + 4 font variables + 5 radii + spacing scale
+- `src/design-system/reset.css` — minimal normalize
+- Google Fonts `<link>` in `index.html` with only the 4 shipped families (EB Garamond, Fraunces, Inter, JetBrains Mono); Georgia is a system font, no import
+- `Wordmark` component — renders "Pace." with accent italic light period
+- `Eyebrow` component — mono uppercase small-caps label used across Library/Settings/Reader
+- React Router 6 with route stubs for `/`, `/library`, `/new`, `/reader`, `/reader/:id`, `/settings`, `/completion/:id`
+- `npm run build` exits 0 with 0 TS errors and 0 lint errors
+
+**Intentionally NOT in S01:**
+- Slider, Toggle — deferred to S05 (settings drawer is where they first matter)
+- `/_ds` specimen route — dropped; tokens proven by real-route use
+- First-run routing gate — deferred to S03 (needs Dexie)
+- Full PWA Lighthouse ≥ 90 — baseline plumbing ships here, full gate is S07
 
 ## Tasks
 
-- [ ] **T01: Vite + React + TS + PWA scaffold**
-  `npm create vite@latest . -- --template react-ts`, add vite-plugin-pwa, React Router, configure strict TS, ESLint, Prettier. Confirm `npm run dev` serves `Hello` and `npm run build` exits 0.
+- [x] **T01: Vite + React + TS + PWA scaffold** *(done — see T01-SUMMARY.md)*
 
-- [ ] **T02: Design system tokens + reset**
-  Write `src/design-system/tokens.css` with all 11 color vars + font vars + radii + spacing scale. Write `src/design-system/reset.css`. Import both in `main.tsx`. Verify at runtime that `getComputedStyle(document.documentElement).getPropertyValue('--accent') === '#D94050'`.
+- [x] **T02: Design tokens + Google Fonts + Wordmark** *(done — see T02-SUMMARY.md, T02-DESIGN-AUDIT.md)*
+  Write `src/design-system/tokens.css` (11 color vars, 4 font vars, 5 radii, 9-step spacing), `src/design-system/reset.css`, add Google Fonts `<link>` to `index.html` for 4 families, write `src/design-system/components/Wordmark.tsx`, wire imports into `main.tsx`. Verify at runtime: `getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() === '#D94050'` and `document.fonts.check('1em Fraunces')` resolves true after `document.fonts.ready`.
 
-- [ ] **T03: Google Fonts + Wordmark component**
-  Add `<link>` to `index.html` with the full family string. Write `src/design-system/components/Wordmark.tsx` — renders `Pace<span class="wordmark-period">.</span>` with the accent italic treatment. Write small CSS module. Add a Playwright smoke test that waits for `document.fonts.ready` and asserts Fraunces is loaded.
-
-- [ ] **T04: Router + stub routes + first-run redirect gate**
-  Install `react-router-dom`. Set up routes per must-haves. Each route is a simple `<div>` with its name. Wire a top-level effect that reads (eventually, from Dexie) `hasCompletedWelcome` and routes to `/` or `/library` — in S01 use a URL param `?welcome=1` placeholder, proper Dexie gate lands in S03.
-
-- [ ] **T05: Specimen route `/_ds`**
-  Render 11 color swatches with `--token`, hex, usage per brief §10.1. Render 4 typeface rows with sample strings per design handoff's design-system screen. Render Slider, Toggle, Eyebrow placeholders (implementations in S01 T06 or deferred).
-
-- [ ] **T06: Slider, Toggle, Eyebrow primitives**
-  Port the three from `/tmp/pace-design/pace/project/screens/*.jsx` into React+TS components living at `src/design-system/components/`. Pure visuals; no behavior yet (Slider accepts `value`, no `onChange` — interactivity comes later).
-
-- [ ] **T07: PWA manifest + placeholder icons + build verification**
-  Configure vite-plugin-pwa with manifest fields. Generate 192 + 512 + maskable icons from a single SVG source (use `pwa-assets-generator` or write a tiny script). Verify `dist/manifest.webmanifest` valid, `dist/sw.js` exists, Lighthouse PWA audit scores ≥ 50 (full 90+ after share-target in S07).
+- [x] **T03: Router + route stubs + Eyebrow primitive** *(done — see T03-SUMMARY.md)*
+  Install nothing new (`react-router-dom` already in T01 deps). Wire `<BrowserRouter>` in `main.tsx`; split `App.tsx` into a routes config. Each route renders a one-line stub referencing the feature it'll become. Write `src/design-system/components/Eyebrow.tsx`. Use it on the Library stub as a smoke test that CSS vars + fonts + primitives all compose.
 
 ## Files Likely Touched
 
-- Root: `package.json`, `vite.config.ts`, `tsconfig.json`, `tsconfig.node.json`, `.eslintrc.cjs`, `.prettierrc`, `.editorconfig`, `.nvmrc`, `index.html`, `.gitignore` (amend)
-- `src/main.tsx`, `src/vite-env.d.ts`
-- `src/app/App.tsx`, `src/app/routes/Welcome.tsx`, `src/app/routes/Library.tsx`, `src/app/routes/NewReading.tsx`, `src/app/routes/Reader.tsx`, `src/app/routes/Settings.tsx`, `src/app/routes/Completion.tsx`, `src/app/routes/DesignSystem.tsx`
-- `src/design-system/tokens.css`, `src/design-system/reset.css`
-- `src/design-system/components/Wordmark.tsx`, `Slider.tsx`, `Toggle.tsx`, `Eyebrow.tsx`
-- `public/icons/icon-source.svg`, generated `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`
-- `tests/unit/tokens.test.ts` (verify CSS vars are readable in jsdom)
-- `tests/e2e/fonts.spec.ts` (Playwright: fonts load)
+- `src/design-system/tokens.css` (new)
+- `src/design-system/reset.css` (new)
+- `src/design-system/components/Wordmark.tsx` (new)
+- `src/design-system/components/Eyebrow.tsx` (new)
+- `src/main.tsx` (add CSS imports + Router)
+- `src/app/App.tsx` (rewrite as routes config)
+- `src/app/routes/Welcome.tsx`, `Library.tsx`, `NewReading.tsx`, `Reader.tsx`, `Settings.tsx`, `Completion.tsx` (stubs — each < 15 lines)
+- `index.html` (add Google Fonts link)
+- `tests/unit/tokens.test.ts` (optional — verify CSS custom-property resolution)
 
 ## Risks
 
-- **Google Fonts as a runtime dependency** — if `fonts.googleapis.com` is blocked (user behind corp firewall, network off on first load), app falls back to system fonts. Acceptable for MVP given SW will cache on first successful load.
-- **vite-plugin-pwa icons:** default auto-generation needs a source SVG. If icon design isn't ready, ship a Pace-wordmark SVG as placeholder — user can replace later without code changes.
-- **Strict TS `noUncheckedIndexedAccess`** adds friction in engine code. Worth it for catching tokenizer off-by-one bugs; accept the friction.
-- **Lighthouse PWA ≥ 50 gate in S01**: without a share_target and with placeholder icons we won't hit 90 yet. The ≥ 50 gate proves the plumbing works; full score lives in S07.
+- **Google Fonts as runtime dep** — if `fonts.googleapis.com` is blocked on first load, app falls back to system fonts. SW caches on first successful load (configured in T01's vite.config.ts). Acceptable.
+- **Strict TS noUncheckedIndexedAccess** adds friction with router `useParams`. Worth it; unwrap with explicit `!` or guard where we control the input.

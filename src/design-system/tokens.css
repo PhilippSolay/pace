@@ -1,0 +1,79 @@
+/* =============================================================================
+ * Pace — Design Tokens
+ *
+ * Source of truth: .gsd/milestones/M001/M001-ROADMAP.md (brief §10)
+ *   - §10.1 color palette (11 tokens)
+ *   - §10.3 spacing scale (9 steps, 4px base)
+ *   - §10.4 radii (5 tokens)
+ *
+ * iOS-style dark UI for a focused-reading RSVP reader.
+ * Tokens marked "user-configurable" may be overridden at runtime by the
+ * Reader Settings sheet (see brief §6) — do not hardcode these values
+ * elsewhere in the app; always resolve through these custom properties.
+ * ============================================================================= */
+
+:root {
+  color-scheme: dark;
+
+  /* ---------------------------------------------------------------------------
+   * Colors (brief §10.1)
+   * --------------------------------------------------------------------------- */
+
+  /* Backgrounds */
+  --page-bg:    #030303;  /* root page background (outside stage) */
+  --stage:      #080809;  /* app chrome, Library background */
+  --reader:     #0A0A0A;  /* reader stage — user-configurable at runtime */
+
+  /* Surfaces */
+  --surface:    #101014;  /* primary surface */
+  --surface-2:  #16161C;  /* elevated surface (sheets, cards) */
+
+  /* Lines & dividers */
+  --line:       #1E1E26;  /* hairline dividers */
+  --line-2:     #2A2A34;  /* borders on elevated surfaces */
+
+  /* Text */
+  --ink:        #F0F0F2;  /* primary text — user-configurable */
+  --ink-2:      #9A9AA6;  /* secondary text */
+  --ink-3:      #5A5A66;  /* tertiary text, placeholders */
+
+  /* Accent */
+  --accent:     #D94050;  /* pin + accent — user-configurable */
+
+  /* ---------------------------------------------------------------------------
+   * Typography (brief §10.2)
+   * System-first fallbacks so the app degrades gracefully if Google Fonts
+   * fails to load. Display & reader fall back to classic book serifs; UI
+   * falls back to the native system sans stack; mono falls back to the
+   * platform monospace stack.
+   * --------------------------------------------------------------------------- */
+
+  --font-display: 'Fraunces', 'Iowan Old Style', 'Palatino', 'Palatino Linotype', 'Book Antiqua', Georgia, 'Times New Roman', Times, serif;
+  --font-reader:  'EB Garamond', 'Iowan Old Style', 'Palatino', 'Palatino Linotype', 'Book Antiqua', Georgia, 'Times New Roman', Times, serif;
+  --font-ui:      'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* ---------------------------------------------------------------------------
+   * Radii (brief §10.4)
+   * --------------------------------------------------------------------------- */
+
+  --r-xl:  20px;
+  --r-lg:  14px;
+  --r-md:  10px;
+  --r-sm:  6px;
+  --r-fab: 50%;
+
+  /* ---------------------------------------------------------------------------
+   * Spacing scale (brief §10.3) — 4px base, 9 steps
+   * --------------------------------------------------------------------------- */
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+  --space-9: 64px;
+}

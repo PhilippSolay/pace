@@ -13,8 +13,9 @@
 - **App name confirmed:** Pace (closes v1 §17.1 open question).
 - **Design handoff integrated:** 6 screens now fully specified including previously-missing Welcome and standalone Settings screens.
 - **Color tokens expanded:** 9 → 11 (adds `--page-bg #030303`, splits old Surface into `--surface` + `--surface-2`).
-- **Typography flexibility:** user-pickable alternatives for display/reader/UI/mono families (was fixed 4-family set).
+- **Typography:** reader-font picker keeps v1 spec (5 options). Display/UI/mono families stay fixed.
 - **Completion screen:** v1 spec retained even though the handoff doesn't mock it — still in scope.
+- **Scope trim (2026-04-24):** dropped Apple/email "coming soon" toasts (buttons now silently start anonymous), Settings Account section, Settings About links (Privacy/Terms/Acknowledgements), in-app SpeechSynthesis fallback, Playwright E2E in MVP, `accountMode`/`accountEmail` preference fields. All deferrable to v2 without impacting the core reader loop.
 
 ---
 
@@ -36,8 +37,9 @@
 14. [Performance Requirements](#14-performance-requirements)
 15. [Accessibility](#15-accessibility)
 16. [Deployment](#16-deployment)
-17. [Development Roadmap](#17-development-roadmap)
-18. [Open Decisions](#18-open-decisions)
+17. [Open Decisions](#17-open-decisions)
+
+> **Roadmap:** See `.gsd/milestones/M001/M001-ROADMAP.md` — the single source of truth for slice sequencing.
 
 ---
 
@@ -191,8 +193,8 @@ Speed-reading hobbyists chasing WPM records. Pace should feel like a comfortable
 
 **v1 behavior**
 
-- "Continue with Apple" and "Continue with email" both open a bottom-sheet toast: *"Sign-in is coming soon. You can use Pace without an account — everything stays on your device."* with a dismiss button.
-- "Use without an account" creates a local anonymous profile (see §9.2) and routes to Library. A flag `hasCompletedWelcome` in `UserPreferences` prevents re-showing.
+- All three buttons do the same thing in v1: set `hasCompletedWelcome = true` in `UserPreferences` and route to `/library`. Apple/email buttons stay in the design for layout fidelity; auth wiring lands in v2.
+- After first completion the Welcome screen is never shown again.
 
 ### 6.2 Library
 
@@ -297,9 +299,7 @@ Full appearance settings (font family, background color, text color, behavior to
 1. Safe-area spacer, then header row: back-chevron (9 × 15 px) + "Settings" title (display 22 px)
 2. Scrollable content padded 20 px, sections separated by 28 px:
 
-#### ACCOUNT
-- Current email + mode badge — UI 13 px + mono 9 px `PACE · LOCAL`. For anonymous users, shows "Anonymous session" and a `Create account` CTA row instead of email.
-- Sign out — UI 13 px `--ink-2` (only when signed in)
+> **v1:** No Account section. The design's ACCOUNT rows (email + Sign out) light up in v2 once Supabase Auth lands.
 
 #### READING
 - Default speed — slider 150–800 WPM, mono value display
@@ -324,10 +324,7 @@ Each opens a color-picker sheet.
 - Clear all data — accent-colored destructive action; confirms before wiping IndexedDB
 
 #### ABOUT
-- Version — mono `1.0.0 · 240` (semver · build number)
-- Privacy policy — chevron → external link
-- Terms — chevron → external link
-- Acknowledgements — chevron → push a view listing open-source components and fonts
+- Version — mono `1.0.0 · 240` (semver · build number). Only row in v1; Privacy/Terms/Acknowledgements added when there's actual copy to link to.
 
 ### 6.8 Completion
 
@@ -563,8 +560,7 @@ export interface UserPreferences {
   punctuationPauses: boolean;       // default false (off by default in design; was true in v1 brief)
   haptics: boolean;                 // default true
   hasCompletedWelcome: boolean;     // default false
-  accountMode: 'anonymous' | 'apple' | 'email';  // default 'anonymous' in v1
-  accountEmail?: string;            // populated in v2 when Supabase Auth lands
+  // v2 adds: accountMode, accountEmail, plus Supabase sync metadata
 }
 
 export class PaceDB extends Dexie {
@@ -615,12 +611,14 @@ export const db = new PaceDB();
 
 Loaded via Google Fonts CSS import. Weights kept minimal to reduce payload.
 
-| CSS variable    | Default             | Options                                                               |
-|-----------------|---------------------|-----------------------------------------------------------------------|
-| `--font-display`| Fraunces            | Fraunces, Newsreader, Spectral, EB Garamond                           |
-| `--font-reader` | EB Garamond         | EB Garamond, Newsreader, Lora, Crimson Pro, Spectral, Fraunces        |
-| `--font-ui`     | Inter               | Inter, Manrope                                                        |
-| `--font-mono`   | JetBrains Mono      | JetBrains Mono, IBM Plex Mono                                         |
+| CSS variable    | Default        | User-selectable in Settings? | Reader-font options (v1)                         |
+|-----------------|----------------|------------------------------|--------------------------------------------------|
+| `--font-display`| Fraunces       | No                            | —                                                |
+| `--font-reader` | EB Garamond    | **Yes** (Settings → Default font) | EB Garamond, Fraunces, Georgia, Inter, JetBrains Mono |
+| `--font-ui`     | Inter          | No                            | —                                                |
+| `--font-mono`   | JetBrains Mono | No                            | —                                                |
+
+Only the reader font is user-picker scope. Display/UI/mono stay fixed. v2 may expose the others if demand shows up.
 
 Google Fonts import (one `<link>` in `index.html`):
 
@@ -629,14 +627,10 @@ family=EB+Garamond:ital,wght@0,400;0,500;1,400
 &family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400
 &family=Inter:wght@300;400;500;600
 &family=JetBrains+Mono:wght@400;500
-&family=Spectral:ital,wght@0,400;0,500;1,400
-&family=Lora:ital,wght@0,400;0,500;1,400
-&family=Crimson+Pro:ital,wght@0,400;0,500;1,400
-&family=Manrope:wght@400;500;600
-&family=IBM+Plex+Mono:wght@400;500
-&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400
 &display=swap
 ```
+
+Georgia is a system font; no import needed.
 
 ### 10.3 Spacing scale
 
@@ -712,8 +706,6 @@ All settings persist in `UserPreferences` (see §9.2). Changes apply live and wr
 | `punctuationPauses`    | boolean    | false            | was `true` in v1 — design default is OFF |
 | `haptics`              | boolean    | true             |                               |
 | `hasCompletedWelcome`  | boolean    | false            | bootstrap gate                |
-| `accountMode`          | enum       | `anonymous`      | `anonymous` / `apple` / `email` (v2) |
-| `accountEmail`         | string?    | undefined        | v2                            |
 
 ---
 
@@ -730,7 +722,7 @@ All settings persist in `UserPreferences` (see §9.2). Changes apply live and wr
 - **Persistence:** Dexie.js (IndexedDB wrapper)
 - **PDF:** pdfjs-dist (Mozilla)
 - **Styling:** vanilla CSS with CSS variables (no Tailwind, no CSS-in-JS runtime)
-- **Testing:** Vitest (unit) + Playwright (E2E)
+- **Testing:** Vitest (unit) — E2E deferred to v2 if needed
 - **Lint:** ESLint + Prettier (no TSLint — dead project)
 
 ### 13.2 Module boundaries
@@ -765,8 +757,7 @@ pace/
 │  │  └─ components/            ← <Slider/>, <Toggle/>, <Eyebrow/>, <ReaderWord/>, <GuideLines/>
 │  └─ types/
 ├─ tests/
-│  ├─ unit/                     ← Vitest
-│  └─ e2e/                      ← Playwright
+│  └─ unit/                     ← Vitest (ReaderEngine math, text processing)
 └─ Dockerfile                   ← nginx-based static serve for VPS (§16)
 ```
 
@@ -783,33 +774,31 @@ pace/
 - vite, @vitejs/plugin-react
 - vite-plugin-pwa
 - typescript, @types/react, @types/react-dom
-- vitest, @vitest/ui
-- playwright, @playwright/test
+- vitest
 - eslint, prettier
 
 No UI-component libraries. No CSS framework. Keep it lean.
 
 ### 13.4 Testing strategy
 
-- **Unit:** reader-engine (pin calc, tokenization, timing math), text-processing (PDF de-hyphenation, header detection)
-- **Integration:** Dexie round-trip (texts, sessions, preferences), Web Share Target handler
-- **E2E (Playwright):** critical path — open app, paste text, start reader, pause, resume after reload, complete
+- **Unit (Vitest):** reader-engine (pin calc, tokenization, timing math), text-processing (PDF de-hyphenation, header detection), Dexie round-trip (fake-indexeddb)
+- **Manual QA:** walk the core paths on a real mobile browser before ship
+- E2E framework (Playwright) deferred to v2 if regression coverage becomes an issue
 
 ---
 
 ## 14. Performance Requirements
 
-| Metric                                | Target       | Notes                                    |
+Enforceable targets only — the others are aspirational and not worth measuring until regression coverage exists.
+
+| Metric                                | Target       | How measured                             |
 |---------------------------------------|--------------|------------------------------------------|
-| Cold first load to Library (LTE)      | < 2.5 s      | Measured via Lighthouse on Moto G4 throttle |
-| Repeat visit (SW cached) to Library   | < 500 ms     | Service worker hits                      |
-| Library scroll FPS                    | 60 fps       | Even with 100+ texts                     |
-| PDF parse (10-page text PDF)          | < 3 s        | pdf.js is slower than PDFKit; tradeoff for web |
-| PDF parse (100-page text PDF)         | < 25 s       | Progress spinner above 500 ms            |
-| Word render latency (tap to play)     | < 50 ms      | First word should feel instant           |
-| Word display timing accuracy          | ±20 ms       | Critical for perceived smoothness        |
-| JS bundle (gzip) initial load         | < 180 KB     | Without pdf.js, which is route-lazy       |
-| LCP on reader route (3G)              | < 1.8 s      |                                          |
+| Word display timing accuracy          | ±20 ms       | Unit test with jest fake timers + real setTimeout sampling |
+| Word render latency (tap to play)     | < 50 ms      | Reader-view first-word manual check       |
+| JS bundle (gzip) initial load         | < 180 KB     | `npm run build` output, excluding lazy pdfjs |
+| Lighthouse PWA score                  | ≥ 90         | Lighthouse in S07 before deploy          |
+| Lighthouse Performance score (mobile) | ≥ 85         | Lighthouse in S07 before deploy          |
+| PDF parse (10-page text PDF)          | < 3 s        | Manual check with a sample PDF            |
 
 ---
 
@@ -830,10 +819,10 @@ On `(prefers-reduced-motion: reduce)`:
 
 ### 15.3 Screen readers
 
-RSVP and screen readers are fundamentally incompatible. The solution:
-- Reader view has a "Play speed reader. Double-tap for accessible read-aloud instead." ARIA label on the stage
-- Double-tap (with screen reader on) triggers a fallback mode that reads the full text via `SpeechSynthesisUtterance`
+RSVP and screen readers are fundamentally incompatible. The solution in v1 is honest exclusion:
+- Reader stage is `aria-hidden="true"` with a visually-hidden sibling that says: *"Pace's speed reader is not screen-reader compatible. To read this text, use your device's built-in Read-Aloud / Speak Screen feature on the original source."*
 - Library, Settings, Completion, Welcome are fully screen-reader compliant with semantic HTML + ARIA roles
+- v2 may add an in-app `SpeechSynthesisUtterance` fallback if demand warrants
 
 ### 15.4 Color contrast
 
@@ -898,77 +887,15 @@ services:
 
 Or GitHub Actions later. For MVP, local-build + SSH ship is fine.
 
-### 16.5 Environment
-
-No env vars required in MVP (no backend, no analytics, no auth). Future: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` when auth lands.
-
 ---
 
-## 17. Development Roadmap
+## 17. Open Decisions
 
-### Phase 1 — Reader Core (Week 1)
+Everything else is closed — see `.gsd/DECISIONS.md`.
 
-- Vite scaffold, TypeScript strict, PWA plugin, design-system tokens
-- `<ReaderWord>`, `<GuideLines>`, `ReaderEngine` class with tokenizer + pin calc + timing
-- `/reader` route with hardcoded Marcus Aurelius sample
-- **Exit:** open `localhost:5173/reader`, tap, watch sample read end-to-end at 350 WPM with correct pin placement.
-
-### Phase 2 — Welcome + Library + Paste + Persistence (Week 2)
-
-- Welcome screen with stubbed sign-in (anonymous flow only in v1)
-- Dexie schema + repository functions
-- Library screen with live query, continue-card, FAB
-- New Reading bottom sheet + Paste Text screen
-- **Exit:** paste a long essay, see it in Library, close browser, reopen, resume from the last word.
-
-### Phase 3 — PDF Upload + Text Processing (Week 3)
-
-- pdf.js integration, document picker via hidden file input
-- Post-processing (de-hyphenation, header detection, page numbers)
-- Error states for scanned PDFs
-- **Exit:** pick a text-based PDF, see it in Library, read it correctly.
-
-### Phase 4 — Settings + Polish (Week 4)
-
-- Full Settings screen with all sections (§6.7)
-- In-session settings drawer
-- Export library (JSON download) + Clear all data
-- Completion screen + haptics + reduce-motion handling
-- Empty states, error states, all wordmark instances consistent
-- **Exit:** every setting in §12 works live. Completion screen shows accurate stats.
-
-### Phase 5 — PWA + Share + Deploy (Week 5)
-
-- Manifest, icons, service worker, Web Share Target handler
-- Dockerfile + nginx.conf + Traefik compose entry
-- First deploy to `pace.solay.cloud`
-- Smoke-test add-to-home-screen on iOS + Android
-- **Exit:** install Pace from Safari/Chrome, share an article from another app, it opens in Pace's paste flow.
-
-### Phase 6 — V2 (post-launch)
-
-- URL article extraction (Readability.js)
-- EPUB support (epub.js)
-- Supabase Auth (Apple OAuth + magic link) + per-user library sync
-- Spritz-style pin rule as a setting
-- Audio pulse mode (metronomic tick per word)
-- Long-press sentence context
-
----
-
-## 18. Open Decisions
-
-| # | Decision                                                       | Recommendation          | Impact                       |
-|---|----------------------------------------------------------------|-------------------------|------------------------------|
-| 1 | App icon design                                                | Defer to Week 5         | PWA install, branding        |
-| 2 | Analytics in v1                                                | None; local-only        | Privacy stance, already in v1 brief §17.7 |
-| 3 | "Read again at +10% WPM" in Completion                         | No — non-gamified       | Already resolved v1.0        |
-| 4 | Paragraph-break indicator                                      | ¶ glyph at 25% opacity  | Already resolved v1.0        |
-| 5 | Long-word strategy                                             | Stretch duration 1.5× cap | Already resolved v1.0      |
-| 6 | Pin rule variants — expose Spritz as option                    | v2 only                 | Already resolved v1.0        |
-| 7 | PWA install prompt behaviour                                   | Passive — browser decides; no custom install UI in v1 | UX clutter |
-| 8 | Offline reader for PDFs                                        | Yes, once parsed they live in IndexedDB | Storage     |
-| 9 | Error monitoring (Sentry etc.)                                 | No in v1; local console + user-visible error toasts only | Ops |
+| # | Decision              | Owner   | Trigger to resolve               |
+|---|-----------------------|---------|----------------------------------|
+| 1 | App icon design       | User    | Before S07 deploy (Week 5)       |
 
 ---
 

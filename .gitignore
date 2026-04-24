@@ -1,7 +1,17 @@
 # GSD runtime state (derived cache)
 .gsd/STATE.md
 
-# Xcode
+# Node / Vite
+node_modules/
+dist/
+dev-dist/
+.vite/
+coverage/
+.eslintcache
+*.log
+npm-debug.log*
+
+# Xcode (historical — pre-pivot scaffold)
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 DerivedData/
@@ -11,7 +21,7 @@ xcuserdata/
 *.xcscmblueprint
 *.xccheckout
 
-# Swift Package Manager
+# Swift Package Manager (historical)
 .swiftpm/
 .build/
 Package.resolved

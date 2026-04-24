@@ -14,8 +14,8 @@
 
 ## Slices
 
-- [ ] **S01: Scaffold + Design System + Router** `risk:low` `depends:[]`
-  > After this: `npm run dev` serves an installable app shell with design-system tokens wired, Google Fonts loading, PWA manifest generated, React Router with stub routes for Welcome / Library / Reader / Settings / Completion, and a typography+color specimen route at `/_ds` verifying every token resolves.
+- [x] **S01: Scaffold + Design System + Router** `risk:low` `depends:[]` *(done 2026-04-24 — see S01-SUMMARY.md)*
+  > After this: `npm run dev` serves an installable app shell with design-system tokens wired, Google Fonts loading, PWA manifest generated, React Router with stub routes for Welcome / Library / Reader / Settings / Completion. (`/_ds` specimen route dropped per scope trim — tokens proven through real-route use.)
 
 - [ ] **S02: Reader Engine + Reader View** `risk:high` `depends:[S01]`
   > After this: `/reader?sample=aurelius` plays a hardcoded Marcus Aurelius passage at 350 WPM with correct pin placement, glow, and guide lines; tap toggles play/pause; swipe left/right jumps ±5 words. (Brief Phase 1 exit criteria.)
