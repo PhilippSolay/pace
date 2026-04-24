@@ -4,6 +4,7 @@ import Welcome from './routes/Welcome';
 import Library from './routes/Library';
 import NewReading from './routes/NewReading';
 import NewReadingPaste from './routes/NewReadingPaste';
+import NewReadingPdf from './routes/NewReadingPdf';
 import Reader from './routes/Reader';
 import Settings from './routes/Settings';
 import Completion from './routes/Completion';
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/library" element={<Library />} />
           <Route path="/new" element={<NewReading />} />
           <Route path="/new/paste" element={<NewReadingPaste />} />
+          <Route path="/new/pdf" element={<NewReadingPdf />} />
           <Route path="/reader" element={<Reader />} />
           <Route path="/reader/:id" element={<Reader />} />
           <Route path="/settings" element={<Settings />} />

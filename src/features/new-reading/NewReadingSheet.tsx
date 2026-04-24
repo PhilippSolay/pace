@@ -101,7 +101,7 @@ function NewReadingSheet() {
       key: 'pdf', icon: docIcon, title: 'Upload PDF',
       desc: 'Text-based PDFs only for now',
       iconColor: 'var(--ink-2)', disabled: false,
-      onClick: () => console.info('[Pace] PDF upload is coming in S04'),
+      onClick: () => navigate('/new/pdf'),
     },
     {
       key: 'url', icon: globeIcon, title: 'From a URL',
