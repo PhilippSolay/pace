@@ -9,7 +9,7 @@
  *
  * See: .gsd/milestones/M001/slices/S03/S03-PLAN.md §6.3 + §8.1
  */
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { createText } from '@/core/persistence/texts';
@@ -82,6 +82,22 @@ function PasteTextView() {
   const [titleInput, setTitleInput] = useState('');
   const [body, setBody] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pick up a share-target draft stashed by the /share route. Runs once on
+  // mount; cleared after read so a subsequent manual /new/paste visit is blank.
+  useEffect(() => {
+    const raw = sessionStorage.getItem('pace:shareDraft');
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw) as { title?: string; content?: string };
+      if (draft.title) setTitleInput(draft.title);
+      if (draft.content) setBody(draft.content);
+    } catch {
+      // ignore parse errors — malformed draft is effectively no draft
+    } finally {
+      sessionStorage.removeItem('pace:shareDraft');
+    }
+  }, []);
 
   const tokenCount = computeTokenCount(body);
   const canSubmit = tokenCount >= MIN_TOKENS && !isSubmitting;

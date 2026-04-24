@@ -8,6 +8,7 @@ import NewReadingPdf from './routes/NewReadingPdf';
 import Reader from './routes/Reader';
 import Settings from './routes/Settings';
 import Completion from './routes/Completion';
+import Share from './routes/Share';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/reader/:id" element={<Reader />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/completion/:id" element={<Completion />} />
+          <Route path="/share" element={<Share />} />
         </Routes>
       </FirstRunGate>
     </BrowserRouter>

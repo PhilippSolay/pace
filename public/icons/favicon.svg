@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" fill="#080809"/>
+  <text
+    x="16"
+    y="16"
+    text-anchor="middle"
+    dominant-baseline="central"
+    font-family="Fraunces, 'Times New Roman', Times, serif"
+    font-size="15"
+    font-weight="500"
+    fill="#FFFFFF"
+  >Pace<tspan font-style="italic" fill="#E14B3B">.</tspan></text>
+</svg>
