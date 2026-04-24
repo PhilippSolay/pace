@@ -1,13 +1,7 @@
-import { useParams } from 'react-router-dom';
-import Eyebrow from '@/design-system/components/Eyebrow';
-import { RouteStub } from './_stub';
+import ReaderView from '@/features/reader/ReaderView';
 
 export default function Reader() {
-  const { id } = useParams<{ id: string }>();
-  const label = id ? `READER · ${id.slice(0, 8)}` : 'READER · SAMPLE';
-  return (
-    <RouteStub background="var(--reader)">
-      <Eyebrow>{label}</Eyebrow>
-    </RouteStub>
-  );
+  // S02 demo ignores the :id param — the route loads the hardcoded sample.
+  // S03 will read the id, look up the text in Dexie, and pass tokens down.
+  return <ReaderView />;
 }
