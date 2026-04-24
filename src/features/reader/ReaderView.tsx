@@ -1,10 +1,13 @@
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useReaderStore } from '@/core/reader-engine/store';
 import type { ReaderToken } from '@/core/reader-engine/types';
 import { updateProgress } from '@/core/persistence/texts';
+import { db, DEFAULT_PREFERENCES } from '@/core/persistence/schema';
 import ReaderWord from '@/design-system/components/ReaderWord';
 import GuideLines from '@/design-system/components/GuideLines';
 import GestureLayer from './GestureLayer';
+import SettingsDrawer from './SettingsDrawer';
 
 /**
  * Full /reader surface. Wires the engine store to ReaderWord +
@@ -18,7 +21,6 @@ import GestureLayer from './GestureLayer';
  * See `.gsd/milestones/M001/slices/S03/S03-PLAN.md`.
  */
 
-const DEFAULT_WPM = 350;
 const PROGRESS_WRITE_DEBOUNCE_MS = 200;
 
 export interface ReaderViewProps {
@@ -36,6 +38,10 @@ function formatRemaining(index: number, totalTokens: number, wpm: number): strin
 }
 
 export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderViewProps) {
+  const prefs =
+    useLiveQuery(() => db.preferences.get('singleton'), [], DEFAULT_PREFERENCES) ??
+    DEFAULT_PREFERENCES;
+
   const index = useReaderStore((s) => s.index);
   const isPlaying = useReaderStore((s) => s.isPlaying);
   const totalTokens = useReaderStore((s) => s.totalTokens);
@@ -43,21 +49,38 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
   const progress = useReaderStore((s) => s.progress);
   const initEngine = useReaderStore((s) => s.initEngine);
   const destroyEngine = useReaderStore((s) => s.destroyEngine);
+  const updateSettings = useReaderStore((s) => s.updateSettings);
   const seek = useReaderStore((s) => s.seek);
   const play = useReaderStore((s) => s.play);
   const pause = useReaderStore((s) => s.pause);
   const jump = useReaderStore((s) => s.jump);
 
   const progressWriteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
-    initEngine(tokens, { wpm: DEFAULT_WPM, punctuationPauses: true }, () => {
-      // S06 will transition to Completion; S03 logs for visibility.
-      console.info('[Pace] reader finished');
-    });
+    initEngine(
+      tokens,
+      { wpm: prefs.wpm, punctuationPauses: prefs.punctuationPauses },
+      () => {
+        // S06 will transition to Completion; S03 logs for visibility.
+        console.info('[Pace] reader finished');
+      },
+    );
     if (startIndex > 0) seek(startIndex);
     return () => destroyEngine();
+    // Engine construction is intentionally tied to `tokens` only — live
+    // preference changes flow through the updateSettings effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokens, initEngine, destroyEngine, seek, startIndex]);
+
+  // Push preference changes into the engine without rebuilding it.
+  useEffect(() => {
+    updateSettings({
+      wpm: prefs.wpm,
+      punctuationPauses: prefs.punctuationPauses,
+    });
+  }, [prefs.wpm, prefs.punctuationPauses, updateSettings]);
 
   // Persist progress — debounced so we don't thrash IndexedDB during fast playback.
   useEffect(() => {
@@ -89,15 +112,14 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
   }
 
   function handleSettingsRequest() {
-    // Placeholder — real settings drawer lands in S05.
-    console.info('[Pace] settings requested');
+    setDrawerOpen(true);
   }
 
   const stageStyle: CSSProperties = {
     position: 'relative',
     width: '100%',
     minHeight: '100dvh',
-    background: 'var(--reader)',
+    background: prefs.backgroundColor,
     overflow: 'hidden',
   };
 
@@ -193,7 +215,7 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
       <div style={topBarStyle}>
         <span style={hintStyle}>tap · pause</span>
         <span style={remainingStyle}>
-          {formatRemaining(index, totalTokens, DEFAULT_WPM)}
+          {formatRemaining(index, totalTokens, prefs.wpm)}
         </span>
       </div>
 
@@ -203,8 +225,14 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
         </div>
       ) : word ? (
         <>
-          <GuideLines word={word} size={54} />
-          <ReaderWord word={word} size={54} glow />
+          {prefs.showGuideLines && <GuideLines word={word} size={prefs.fontSize} />}
+          <ReaderWord
+            word={word}
+            size={prefs.fontSize}
+            glow={prefs.highlightPin}
+            color={prefs.textColor}
+            pinColor={prefs.pinColor}
+          />
         </>
       ) : null}
 
@@ -228,6 +256,8 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
         text, use your device&apos;s built-in Read-Aloud feature on the original
         source.
       </span>
+
+      <SettingsDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </GestureLayer>
   );
 }

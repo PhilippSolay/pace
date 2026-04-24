@@ -1,10 +1,5 @@
-import Eyebrow from '@/design-system/components/Eyebrow';
-import { RouteStub } from './_stub';
+import SettingsView from '@/features/settings/SettingsView';
 
 export default function Settings() {
-  return (
-    <RouteStub>
-      <Eyebrow>SETTINGS · TBD</Eyebrow>
-    </RouteStub>
-  );
+  return <SettingsView />;
 }

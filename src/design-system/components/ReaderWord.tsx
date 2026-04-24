@@ -13,9 +13,17 @@ export interface ReaderWordProps {
   word: string;
   size?: number;
   glow?: boolean;
+  color?: string;
+  pinColor?: string;
 }
 
-export default function ReaderWord({ word, size = 54, glow = true }: ReaderWordProps) {
+export default function ReaderWord({
+  word,
+  size = 54,
+  glow = true,
+  color = 'var(--ink)',
+  pinColor = 'var(--accent)',
+}: ReaderWordProps) {
   const idx = pinIndex(word);
   const left = word.slice(0, idx);
   const pin = word[idx] ?? '';
@@ -31,7 +39,7 @@ export default function ReaderWord({ word, size = 54, glow = true }: ReaderWordP
     fontFamily: 'var(--font-reader)',
     fontWeight: 400,
     fontSize: size,
-    color: 'var(--ink)',
+    color,
     lineHeight: 1,
     letterSpacing: '0.005em',
     pointerEvents: 'none',
@@ -45,7 +53,7 @@ export default function ReaderWord({ word, size = 54, glow = true }: ReaderWordP
   };
 
   const pinStyle: CSSProperties = {
-    color: 'var(--accent)',
+    color: pinColor,
     position: 'relative',
     zIndex: 1,
   };
@@ -61,8 +69,7 @@ export default function ReaderWord({ word, size = 54, glow = true }: ReaderWordP
     width: size * 1.6,
     height: size * 1.2,
     transform: 'translate(-50%, -50%)',
-    background:
-      'radial-gradient(ellipse at center, color-mix(in oklab, var(--accent) 35%, transparent) 0%, transparent 65%)',
+    background: `radial-gradient(ellipse at center, color-mix(in oklab, ${pinColor} 35%, transparent) 0%, transparent 65%)`,
     pointerEvents: 'none',
     zIndex: 0,
   };
