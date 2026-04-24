@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useReaderStore } from '@/core/reader-engine/store';
 import type { ReaderToken } from '@/core/reader-engine/types';
-import { updateProgress } from '@/core/persistence/texts';
+import { markCompleted, updateProgress } from '@/core/persistence/texts';
+import { startSession, endSession } from '@/core/persistence/sessions';
 import { db, DEFAULT_PREFERENCES } from '@/core/persistence/schema';
+import { createHaptics } from '@/core/haptics/haptics';
+import { useReduceMotion } from '@/core/accessibility/useReduceMotion';
 import ReaderWord from '@/design-system/components/ReaderWord';
 import GuideLines from '@/design-system/components/GuideLines';
 import GestureLayer from './GestureLayer';
@@ -56,15 +60,44 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
   const jump = useReaderStore((s) => s.jump);
 
   const progressWriteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const sessionStartRef = useRef<number>(0);
+  const latestIndexRef = useRef<number>(index);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const navigate = useNavigate();
+  const reduceMotion = useReduceMotion();
+  const haptics = useMemo(
+    () => createHaptics(prefs.haptics, reduceMotion),
+    [prefs.haptics, reduceMotion],
+  );
+
+  // Keep a ref with the latest token index so cleanup callbacks can read
+  // it without going stale through closures.
+  useEffect(() => {
+    latestIndexRef.current = index;
+  }, [index]);
 
   useEffect(() => {
     initEngine(
       tokens,
       { wpm: prefs.wpm, punctuationPauses: prefs.punctuationPauses },
-      () => {
-        // S06 will transition to Completion; S03 logs for visibility.
-        console.info('[Pace] reader finished');
+      async () => {
+        haptics.finish();
+        if (!textId) return;
+        await markCompleted(textId);
+        // End the session before navigating so CompletionView sees endedAt.
+        if (sessionIdRef.current !== null) {
+          const elapsedMs = Date.now() - sessionStartRef.current;
+          const elapsedMin = Math.max(elapsedMs / 60000, 0.01);
+          const averageWPM = Math.round(latestIndexRef.current / elapsedMin);
+          await endSession(sessionIdRef.current, {
+            tokensRead: latestIndexRef.current,
+            averageWPM,
+          });
+          sessionIdRef.current = null;
+        }
+        navigate(`/completion/${textId}`, { replace: true });
       },
     );
     if (startIndex > 0) seek(startIndex);
@@ -73,6 +106,41 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
     // preference changes flow through the updateSettings effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tokens, initEngine, destroyEngine, seek, startIndex]);
+
+  // Start a reading session when we have a textId; end it on unmount
+  // unless the finish path already ended it.
+  useEffect(() => {
+    if (!textId) return;
+    let cancelled = false;
+    void startSession(textId).then((s) => {
+      if (cancelled) return;
+      sessionIdRef.current = s.id;
+      sessionStartRef.current = Date.now();
+    });
+    return () => {
+      cancelled = true;
+      if (sessionIdRef.current !== null) {
+        const elapsedMs = Date.now() - sessionStartRef.current;
+        const elapsedMin = Math.max(elapsedMs / 60000, 0.01);
+        const averageWPM = Math.round(latestIndexRef.current / elapsedMin);
+        void endSession(sessionIdRef.current, {
+          tokensRead: latestIndexRef.current,
+          averageWPM,
+        });
+        sessionIdRef.current = null;
+      }
+    };
+  }, [textId]);
+
+  // Fire a medium haptic whenever playback lands on a paragraph-break token.
+  useEffect(() => {
+    const token = tokens[index];
+    if (token?.isParagraphBreak === true) {
+      haptics.medium();
+    }
+    // We intentionally watch `word` too so the cue fires on each new
+    // paragraph-break token render, not just on index changes.
+  }, [word, index, tokens, haptics]);
 
   // Push preference changes into the engine without rebuilding it.
   useEffect(() => {
@@ -107,6 +175,7 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
   }, [isPlaying, pause]);
 
   function handleTap() {
+    haptics.soft();
     if (isPlaying) pause();
     else play();
   }
