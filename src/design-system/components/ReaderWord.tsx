@@ -5,13 +5,11 @@ import { pinIndex } from '@/core/reader-engine/pin';
  * Single-word reader surface. The pin character's CENTER sits on the
  * stage's vertical centerline so the eye locks onto it without drift.
  * We measure the pin glyph at runtime and translate the word container
- * left by half its width — the resulting micro-shifts between words
- * are invisible at typical reading WPM, while a wider letter ('w')
- * vs a narrow one ('i') no longer pushes the focal point off-center.
+ * left by half its width.
  *
- * Note: the brief §2 originally specified "pin's left edge on the
- * stage centerline" for a stable anchor, but real-world testing showed
- * the eye reads "centered" not "left-anchored" — so we center.
+ * The optional radial-gradient glow behind the pin character was
+ * removed — the accent-colored pin glyph alone reads cleanly without
+ * the extra ornament.
  *
  * See `.gsd/milestones/M001/slices/S02/tasks/T03-PLAN.md`.
  */
@@ -19,7 +17,6 @@ import { pinIndex } from '@/core/reader-engine/pin';
 export interface ReaderWordProps {
   word: string;
   size?: number;
-  glow?: boolean;
   color?: string;
   pinColor?: string;
 }
@@ -29,7 +26,6 @@ const FALLBACK_PIN_WIDTH_RATIO = 0.4;
 export default function ReaderWord({
   word,
   size = 54,
-  glow = true,
   color = 'var(--ink)',
   pinColor = 'var(--accent)',
 }: ReaderWordProps) {
@@ -76,39 +72,20 @@ export default function ReaderWord({
     position: 'absolute',
     right: '100%',
     whiteSpace: 'pre',
-    zIndex: 1,
   };
 
   const pinStyle: CSSProperties = {
     color: pinColor,
     position: 'relative',
-    zIndex: 1,
-  };
-
-  const rightStyle: CSSProperties = {
-    zIndex: 1,
-  };
-
-  const glowStyle: CSSProperties = {
-    position: 'absolute',
-    left: pinWidth / 2,
-    top: '50%',
-    width: size * 1.6,
-    height: size * 1.2,
-    transform: 'translate(-50%, -50%)',
-    background: `radial-gradient(ellipse at center, color-mix(in oklab, ${pinColor} 35%, transparent) 0%, transparent 65%)`,
-    pointerEvents: 'none',
-    zIndex: 0,
   };
 
   return (
     <div style={rootStyle} aria-hidden>
-      {glow && <div style={glowStyle} />}
       {left && <span style={leftStyle}>{left}</span>}
       <span ref={pinRef} style={pinStyle}>
         {pin}
       </span>
-      {right && <span style={rightStyle}>{right}</span>}
+      {right && <span>{right}</span>}
     </div>
   );
 }

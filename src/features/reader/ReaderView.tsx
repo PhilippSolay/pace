@@ -316,7 +316,6 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
           <ReaderWord
             word={word}
             size={prefs.fontSize}
-            glow={prefs.highlightPin}
             color={prefs.textColor}
             pinColor={prefs.pinColor}
           />

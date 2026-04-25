@@ -377,7 +377,7 @@ export default function SettingsView() {
 
           <div style={PREVIEW_TILE_STYLE}>
             <div style={PREVIEW_EYEBROW_STYLE}>PREVIEW</div>
-            <ReaderWord word="preview" size={28} glow={prefs.highlightPin} />
+            <ReaderWord word="preview" size={28} />
           </div>
 
           <SettingRow label="Background" onClick={() => pickColor(bgColorRef)}
@@ -401,9 +401,6 @@ export default function SettingsView() {
         {/* BEHAVIOR */}
         <div style={SECTION_STYLE}>
           <Eyebrow>BEHAVIOR</Eyebrow>
-          <SettingRow label="Highlight pinned character"
-            right={<Toggle on={prefs.highlightPin} label="Highlight pinned character"
-              onChange={(v) => { void setPreference('highlightPin', v); }} />} />
           <SettingRow label="Show center guide lines"
             right={<Toggle on={prefs.showGuideLines} label="Show center guide lines"
               onChange={(v) => { void setPreference('showGuideLines', v); }} />} />
