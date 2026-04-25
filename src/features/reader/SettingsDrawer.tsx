@@ -154,10 +154,30 @@ export default function SettingsDrawer({ open, onClose }: SettingsDrawerProps) {
     borderRadius: 2, margin: '0 auto 16px',
   };
 
+  // Stop pointer events from bubbling to the GestureLayer underneath —
+  // otherwise dragging the WPM slider leftward registers as a swipe-left
+  // and rewinds the reader 5 words on every release.
+  const stopBubble = (event: PointerEvent<HTMLDivElement> | React.MouseEvent<HTMLDivElement>) =>
+    event.stopPropagation();
+
   return (
     <>
-      <div style={backdropStyle} onClick={onClose} aria-hidden="true" />
-      <div style={sheetStyle} role="dialog" aria-label="Reader settings">
+      <div
+        style={backdropStyle}
+        onClick={onClose}
+        onPointerDown={stopBubble}
+        onPointerUp={stopBubble}
+        aria-hidden="true"
+      />
+      <div
+        style={sheetStyle}
+        role="dialog"
+        aria-label="Reader settings"
+        onClick={stopBubble}
+        onPointerDown={stopBubble}
+        onPointerMove={stopBubble}
+        onPointerUp={stopBubble}
+      >
         <div style={handleStyle} />
 
         <div style={EYEBROW_STYLE}>READING</div>

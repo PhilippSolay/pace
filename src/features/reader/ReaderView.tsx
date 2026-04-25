@@ -183,6 +183,7 @@ export default function ReaderView({ tokens, textId, startIndex = 0, chapters = 
   }
 
   function handleSettingsRequest() {
+    if (isPlaying) pause();
     setDrawerOpen(true);
   }
 
@@ -452,6 +453,8 @@ export default function ReaderView({ tokens, textId, startIndex = 0, chapters = 
       {chaptersOpen && (
         <div
           onClick={() => setChaptersOpen(false)}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
           style={{
             position: 'fixed',
             inset: 0,
@@ -462,6 +465,9 @@ export default function ReaderView({ tokens, textId, startIndex = 0, chapters = 
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerMove={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
             style={{
               position: 'absolute',
               left: 6,
