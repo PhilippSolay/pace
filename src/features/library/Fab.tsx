@@ -1,7 +1,7 @@
 /**
  * Floating action button for the Library screen. Stateless presentational
- * component anchored to the nearest relative parent (LibraryView). Dual
- * shadow matches brief §10.5.
+ * component pinned to the viewport bottom-right via `position: fixed` so
+ * it stays put while the library list scrolls. Dual shadow matches brief §10.5.
  *
  * See: .gsd/milestones/M001/slices/S03/S03-PLAN.md
  */
@@ -13,9 +13,10 @@ export interface FabProps {
 }
 
 const FAB_STYLE: CSSProperties = {
-  position: 'absolute',
+  position: 'fixed',
   right: 20,
-  bottom: 34,
+  // calc + safe-area-inset-bottom so the FAB clears the iOS home-indicator
+  bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
   width: 48,
   height: 48,
   borderRadius: 'var(--r-fab)',
@@ -27,6 +28,7 @@ const FAB_STYLE: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   boxShadow: '0 8px 24px rgba(217,64,80,0.3), 0 2px 6px rgba(0,0,0,0.5)',
+  zIndex: 20,
 };
 
 function Fab({ onClick, label = 'Add a new text' }: FabProps) {
