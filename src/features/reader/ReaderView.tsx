@@ -341,6 +341,37 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
           </button>
           <button
             type="button"
+            aria-label="Restart from beginning"
+            onClick={(e) => { e.stopPropagation(); pause(); seek(0); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            style={{
+              position: 'absolute',
+              bottom: 24,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(8px)',
+              color: 'rgba(255,255,255,0.55)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"
+              stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden>
+              <polygon points="19 20 9 12 19 4 19 20" />
+              <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
             aria-label="Settings"
             onClick={(e) => { e.stopPropagation(); setDrawerOpen(true); }}
             onPointerDown={(e) => e.stopPropagation()}
