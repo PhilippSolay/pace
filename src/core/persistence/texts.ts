@@ -14,12 +14,16 @@ export async function createText(input: {
   title: string;
   content: string;
   sourceType: SourceType;
+  author?: string;
+  url?: string;
 }): Promise<ReadingText> {
   const now = Date.now();
   const wordCount = input.content.trim().split(/\s+/u).filter(Boolean).length;
   const row: ReadingText = {
     id: crypto.randomUUID(),
     title: input.title,
+    ...(input.author ? { author: input.author } : {}),
+    ...(input.url ? { url: input.url } : {}),
     content: input.content,
     sourceType: input.sourceType,
     createdAt: now,

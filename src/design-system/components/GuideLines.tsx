@@ -1,10 +1,12 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { pinIndex } from '@/core/reader-engine/pin';
+import type { CSSProperties } from 'react';
 
 /**
  * Two thin vertical bars sitting above and below the pin character,
- * centered on the measured width of the pin glyph (not the stage's
- * vertical centerline — pin widths vary across fonts).
+ * anchored to the stage's vertical centerline. Per brief §2 the pin
+ * character's left edge sits on the centerline, and the guide lines
+ * mark that fixation anchor. They stay put across word changes —
+ * earlier versions measured the pin glyph and tracked its right edge,
+ * which produced visible horizontal jitter as letter widths varied.
  *
  * See `.gsd/milestones/M001/slices/S02/tasks/T03-PLAN.md`.
  */
@@ -14,45 +16,12 @@ export interface GuideLinesProps {
   size?: number;
 }
 
-const FALLBACK_RATIO = 0.35;
 const BAR_HEIGHT = 22;
 
-export default function GuideLines({ word, size = 54 }: GuideLinesProps) {
-  const idx = pinIndex(word);
-  const pin = word[idx] ?? '';
-  const measureRef = useRef<HTMLSpanElement>(null);
-  const [pinWidth, setPinWidth] = useState<number>(size * FALLBACK_RATIO);
-
-  useLayoutEffect(() => {
-    let cancelled = false;
-    const measure = () => {
-      if (cancelled) return;
-      const el = measureRef.current;
-      if (!el) return;
-      setPinWidth(el.getBoundingClientRect().width);
-    };
-    // Measure immediately on mount; re-measure once fonts have loaded.
-    measure();
-    void document.fonts?.ready.then(measure);
-    return () => {
-      cancelled = true;
-    };
-  }, [pin, size]);
-
-  const measurerStyle: CSSProperties = {
-    position: 'absolute',
-    visibility: 'hidden',
-    pointerEvents: 'none',
-    fontFamily: 'var(--font-reader)',
-    fontWeight: 400,
-    fontSize: size,
-    letterSpacing: '0.005em',
-    whiteSpace: 'pre',
-  };
-
+export default function GuideLines({ word: _word, size = 54 }: GuideLinesProps) {
   const barBase: CSSProperties = {
     position: 'absolute',
-    left: `calc(50% + ${pinWidth / 2}px)`,
+    left: '50%',
     top: '50%',
     width: 1,
     height: BAR_HEIGHT,
@@ -72,9 +41,6 @@ export default function GuideLines({ word, size = 54 }: GuideLinesProps) {
 
   return (
     <>
-      <span ref={measureRef} aria-hidden style={measurerStyle}>
-        {pin}
-      </span>
       <div aria-hidden style={topBarStyle} />
       <div aria-hidden style={bottomBarStyle} />
     </>

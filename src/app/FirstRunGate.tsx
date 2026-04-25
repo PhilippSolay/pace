@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getPreferences } from '@/core/persistence/preferences';
+import { seedDefaultTextsIfEmpty } from '@/core/persistence/seed';
 
 /**
  * Guards the router: if the user hasn't completed Welcome, force them
@@ -24,11 +25,15 @@ export default function FirstRunGate({ children }: FirstRunGateProps) {
 
   useEffect(() => {
     let cancelled = false;
-    getPreferences().then((prefs) => {
+    void (async () => {
+      const prefs = await getPreferences();
+      // Seed default texts the first time the library is empty so new
+      // users have something to read on day one. Idempotent.
+      await seedDefaultTextsIfEmpty();
       if (cancelled) return;
       setHasCompleted(prefs.hasCompletedWelcome);
       setReady(true);
-    });
+    })();
     return () => {
       cancelled = true;
     };

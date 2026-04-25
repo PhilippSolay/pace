@@ -95,10 +95,31 @@ function TextRow({ text, onOpen, onDelete }: TextRowProps): JSX.Element {
           color: 'var(--ink-2)', marginTop: 4, letterSpacing: '0.08em',
           display: 'flex', alignItems: 'center', gap: 6,
         }}>
-          <span>{SOURCE_LABELS[text.sourceType]}</span>
+          <span>{(text.author ?? SOURCE_LABELS[text.sourceType]).toUpperCase()}</span>
           {metaDot}<span>{text.wordCount.toLocaleString()} WORDS</span>
           {metaDot}<span>{estimateMinutes(text.wordCount)} MIN</span>
           {text.isCompleted && (<>{metaDot}<span style={{ color: 'var(--accent)' }}>READ</span></>)}
+          {text.url && (
+            <a
+              href={text.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              aria-label="Open source"
+              style={{
+                marginLeft: 4, color: 'var(--ink-3)',
+                display: 'inline-flex', alignItems: 'center',
+              }}
+            >
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                <path d="M14 3h7v7" />
+                <path d="M10 14L21 3" />
+                <path d="M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6" />
+              </svg>
+            </a>
+          )}
         </div>
         {showProgressBar && (
           <div style={{ height: 1, background: 'var(--line-2)', marginTop: 8, position: 'relative' }}>

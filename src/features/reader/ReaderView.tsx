@@ -269,6 +269,24 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
     pointerEvents: 'none',
   };
 
+  const cornerButtonStyle = (side: 'left' | 'right'): CSSProperties => ({
+    position: 'absolute',
+    bottom: 24,
+    [side]: 24,
+    width: 40,
+    height: 40,
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    backdropFilter: 'blur(8px)',
+    color: 'rgba(255,255,255,0.55)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    padding: 0,
+  });
+
   const currentToken = tokens[index];
   const showIdleHint = index === 0 && !isPlaying;
   const isParagraphBreak = currentToken?.isParagraphBreak === true;
@@ -306,6 +324,38 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
       ) : null}
 
       {showIdleHint && <div style={pausedPillStyle}>Paused — tap to start</div>}
+
+      {!isPlaying && (
+        <>
+          <button
+            type="button"
+            aria-label="Library"
+            onClick={(e) => { e.stopPropagation(); navigate('/library'); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            style={cornerButtonStyle('left')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            aria-label="Settings"
+            onClick={(e) => { e.stopPropagation(); setDrawerOpen(true); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            style={cornerButtonStyle('right')}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+        </>
+      )}
 
       <div style={progressBarStyle}>
         <div style={progressFillStyle} />

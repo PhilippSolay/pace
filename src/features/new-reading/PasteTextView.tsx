@@ -48,8 +48,14 @@ const titleInputStyle: CSSProperties = {
   background: 'transparent', border: 'none', outline: 'none',
   width: '100%', padding: '12px 0',
 };
+const metaInputStyle: CSSProperties = {
+  fontFamily: 'var(--font-ui)', fontSize: 13, fontWeight: 400,
+  color: 'var(--ink-2)', letterSpacing: '0.01em',
+  background: 'transparent', border: 'none', outline: 'none',
+  width: '100%', padding: '6px 0',
+};
 const dividerStyle: CSSProperties = {
-  height: 1, background: 'var(--line)', marginBottom: 14, flexShrink: 0,
+  height: 1, background: 'var(--line)', marginTop: 8, marginBottom: 14, flexShrink: 0,
 };
 const bodyTextareaStyle: CSSProperties = {
   fontFamily: 'var(--font-reader)', fontSize: 17, lineHeight: 1.5,
@@ -80,6 +86,8 @@ function normalizeBody(content: string): string {
 function PasteTextView() {
   const navigate = useNavigate();
   const [titleInput, setTitleInput] = useState('');
+  const [authorInput, setAuthorInput] = useState('');
+  const [urlInput, setUrlInput] = useState('');
   const [body, setBody] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -108,7 +116,15 @@ function PasteTextView() {
     try {
       const title = titleInput.trim() || deriveTitle(body);
       const content = normalizeBody(body);
-      const text = await createText({ title, content, sourceType: 'paste' });
+      const author = authorInput.trim();
+      const url = urlInput.trim();
+      const text = await createText({
+        title,
+        content,
+        sourceType: 'paste',
+        ...(author ? { author } : {}),
+        ...(url ? { url } : {}),
+      });
       navigate(`/reader/${text.id}`, { replace: true });
     } catch {
       setIsSubmitting(false);
@@ -134,6 +150,13 @@ function PasteTextView() {
         <input type="text" value={titleInput} placeholder="Title (optional)"
           maxLength={TITLE_MAX_CHARS} style={titleInputStyle}
           onChange={(e) => setTitleInput(e.target.value)} />
+        <input type="text" value={authorInput} placeholder="Author (optional)"
+          style={metaInputStyle}
+          onChange={(e) => setAuthorInput(e.target.value)} />
+        <input type="url" value={urlInput} placeholder="Source URL (optional)"
+          inputMode="url" autoCapitalize="none" autoCorrect="off"
+          style={metaInputStyle}
+          onChange={(e) => setUrlInput(e.target.value)} />
         <div style={dividerStyle} />
         <textarea value={body} placeholder="Paste or type here…"
           style={bodyTextareaStyle}

@@ -29,6 +29,8 @@ export type SourceType = 'paste' | 'pdf' | 'share' | 'url';
 export interface ReadingText {
   id: string;                       // UUID v4
   title: string;
+  author?: string;                  // optional attribution shown in Library meta row
+  url?: string;                     // optional source URL — small external-link icon in Library
   content: string;                  // raw post-processed text
   sourceType: SourceType;
   createdAt: number;                // epoch ms

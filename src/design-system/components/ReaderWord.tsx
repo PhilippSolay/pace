@@ -1,10 +1,17 @@
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { pinIndex } from '@/core/reader-engine/pin';
 
 /**
- * Single-word reader surface. The pin character sits with its left edge
- * on the stage's vertical centerline; left-of-pin characters hang via
- * absolute-positioned right-align, right-of-pin characters flow inline.
+ * Single-word reader surface. The pin character's CENTER sits on the
+ * stage's vertical centerline so the eye locks onto it without drift.
+ * We measure the pin glyph at runtime and translate the word container
+ * left by half its width — the resulting micro-shifts between words
+ * are invisible at typical reading WPM, while a wider letter ('w')
+ * vs a narrow one ('i') no longer pushes the focal point off-center.
+ *
+ * Note: the brief §2 originally specified "pin's left edge on the
+ * stage centerline" for a stable anchor, but real-world testing showed
+ * the eye reads "centered" not "left-anchored" — so we center.
  *
  * See `.gsd/milestones/M001/slices/S02/tasks/T03-PLAN.md`.
  */
@@ -16,6 +23,8 @@ export interface ReaderWordProps {
   color?: string;
   pinColor?: string;
 }
+
+const FALLBACK_PIN_WIDTH_RATIO = 0.4;
 
 export default function ReaderWord({
   word,
@@ -29,11 +38,29 @@ export default function ReaderWord({
   const pin = word[idx] ?? '';
   const right = word.slice(idx + 1);
 
+  const pinRef = useRef<HTMLSpanElement>(null);
+  const [pinWidth, setPinWidth] = useState<number>(size * FALLBACK_PIN_WIDTH_RATIO);
+
+  useLayoutEffect(() => {
+    let cancelled = false;
+    const measure = () => {
+      if (cancelled) return;
+      const el = pinRef.current;
+      if (!el) return;
+      setPinWidth(el.getBoundingClientRect().width);
+    };
+    measure();
+    void document.fonts?.ready.then(measure);
+    return () => {
+      cancelled = true;
+    };
+  }, [pin, size]);
+
   const rootStyle: CSSProperties = {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    transform: 'translate(0, -50%)',
+    transform: `translate(-${pinWidth / 2}px, -50%)`,
     display: 'flex',
     alignItems: 'baseline',
     fontFamily: 'var(--font-reader)',
@@ -64,7 +91,7 @@ export default function ReaderWord({
 
   const glowStyle: CSSProperties = {
     position: 'absolute',
-    left: 0,
+    left: pinWidth / 2,
     top: '50%',
     width: size * 1.6,
     height: size * 1.2,
@@ -78,7 +105,9 @@ export default function ReaderWord({
     <div style={rootStyle} aria-hidden>
       {glow && <div style={glowStyle} />}
       {left && <span style={leftStyle}>{left}</span>}
-      <span style={pinStyle}>{pin}</span>
+      <span ref={pinRef} style={pinStyle}>
+        {pin}
+      </span>
       {right && <span style={rightStyle}>{right}</span>}
     </div>
   );
