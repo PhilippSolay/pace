@@ -5,7 +5,7 @@ import { useReaderStore } from '@/core/reader-engine/store';
 import type { ReaderToken } from '@/core/reader-engine/types';
 import { markCompleted, updateProgress } from '@/core/persistence/texts';
 import { startSession, endSession } from '@/core/persistence/sessions';
-import { db, DEFAULT_PREFERENCES } from '@/core/persistence/schema';
+import { db, DEFAULT_PREFERENCES, type ChapterMarker } from '@/core/persistence/schema';
 import { createHaptics } from '@/core/haptics/haptics';
 import { useReduceMotion } from '@/core/accessibility/useReduceMotion';
 import ReaderWord from '@/design-system/components/ReaderWord';
@@ -31,6 +31,7 @@ export interface ReaderViewProps {
   tokens: ReaderToken[];
   textId?: string;
   startIndex?: number;
+  chapters?: ChapterMarker[];
 }
 
 function formatRemaining(index: number, totalTokens: number, wpm: number): string {
@@ -41,7 +42,7 @@ function formatRemaining(index: number, totalTokens: number, wpm: number): strin
   return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
 }
 
-export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderViewProps) {
+export default function ReaderView({ tokens, textId, startIndex = 0, chapters = [] }: ReaderViewProps) {
   const prefs =
     useLiveQuery(() => db.preferences.get('singleton'), [], DEFAULT_PREFERENCES) ??
     DEFAULT_PREFERENCES;
@@ -64,6 +65,7 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
   const sessionStartRef = useRef<number>(0);
   const latestIndexRef = useRef<number>(index);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [chaptersOpen, setChaptersOpen] = useState(false);
 
   const navigate = useNavigate();
   const reduceMotion = useReduceMotion();
@@ -291,6 +293,12 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
   const showIdleHint = index === 0 && !isPlaying;
   const isParagraphBreak = currentToken?.isParagraphBreak === true;
 
+  let currentChapter: ChapterMarker | undefined;
+  for (const c of chapters) {
+    if (index >= c.tokenIndex) currentChapter = c;
+    else break;
+  }
+
   return (
     <GestureLayer
       onTap={handleTap}
@@ -305,6 +313,39 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
           {formatRemaining(index, totalTokens, prefs.wpm)}
         </span>
       </div>
+
+      {!isPlaying && chapters.length > 0 && currentChapter && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setChaptersOpen(true); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          style={{
+            position: 'absolute',
+            top: 92,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            maxWidth: 'calc(100% - 48px)',
+            padding: '6px 14px',
+            borderRadius: 999,
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(8px)',
+            fontFamily: 'var(--font-ui)',
+            fontSize: 11,
+            fontWeight: 500,
+            letterSpacing: '0.06em',
+            color: 'rgba(255,255,255,0.65)',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: 'block',
+          }}
+        >
+          {currentChapter.title}
+        </button>
+      )}
 
       {isParagraphBreak ? (
         <div style={paragraphGlyphStyle} aria-hidden>
@@ -407,6 +448,72 @@ export default function ReaderView({ tokens, textId, startIndex = 0 }: ReaderVie
       </span>
 
       <SettingsDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+
+      {chaptersOpen && (
+        <div
+          onClick={() => setChaptersOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 10,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'absolute',
+              left: 6,
+              right: 6,
+              bottom: 0,
+              maxHeight: '60dvh',
+              overflowY: 'auto',
+              background: 'rgba(22,22,28,0.96)',
+              backdropFilter: 'blur(16px)',
+              borderTopLeftRadius: 'var(--r-xl)',
+              borderTopRightRadius: 'var(--r-xl)',
+              borderTop: '1px solid var(--line-2)',
+              borderLeft: '1px solid var(--line-2)',
+              borderRight: '1px solid var(--line-2)',
+              padding: '10px 0 26px',
+            }}
+          >
+            <div style={{
+              width: 36, height: 3, background: 'var(--ink-3)',
+              opacity: 0.5, borderRadius: 2, margin: '0 auto 16px',
+            }} />
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: 9,
+              letterSpacing: '0.28em', color: 'var(--ink-3)',
+              fontWeight: 500, padding: '0 22px 12px',
+            }}>
+              CHAPTERS
+            </div>
+            {chapters.map((c, i) => {
+              const next = chapters[i + 1]?.tokenIndex ?? totalTokens;
+              const isCurrent = index >= c.tokenIndex && index < next;
+              return (
+                <button
+                  key={`${c.tokenIndex}-${i}`}
+                  type="button"
+                  onClick={() => { seek(c.tokenIndex); setChaptersOpen(false); }}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '12px 22px',
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    fontFamily: 'var(--font-display)', fontSize: 14,
+                    color: isCurrent ? 'var(--accent)' : 'var(--ink)',
+                    borderBottom: i < chapters.length - 1 ? '1px solid var(--line)' : 'none',
+                  }}
+                >
+                  {c.title}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </GestureLayer>
   );
 }

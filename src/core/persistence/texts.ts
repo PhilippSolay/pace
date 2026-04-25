@@ -7,7 +7,7 @@
  * See: .gsd/milestones/M001/slices/S03/tasks/T01-PLAN.md
  */
 
-import { db, type ReadingText, type SourceType } from './schema';
+import { db, type ChapterMarker, type ReadingText, type SourceType } from './schema';
 
 /** Create a new reading text with a fresh id, timestamps, and word count. */
 export async function createText(input: {
@@ -16,6 +16,7 @@ export async function createText(input: {
   sourceType: SourceType;
   author?: string;
   url?: string;
+  chapters?: ChapterMarker[];
 }): Promise<ReadingText> {
   const now = Date.now();
   const wordCount = input.content.trim().split(/\s+/u).filter(Boolean).length;
@@ -31,6 +32,7 @@ export async function createText(input: {
     wordCount,
     currentTokenIndex: 0,
     isCompleted: false,
+    ...(input.chapters && input.chapters.length > 0 ? { chapters: input.chapters } : {}),
   };
   await db.texts.add(row);
   return row;

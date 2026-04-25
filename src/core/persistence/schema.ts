@@ -26,6 +26,11 @@ export type SourceType = 'paste' | 'pdf' | 'share' | 'url';
  * Indexed by `id` (UUID v4); secondary indices on `updatedAt` (for recency
  * sorts) and `isCompleted` (for library filtering).
  */
+export interface ChapterMarker {
+  title: string;       // e.g. "Chapter I", "Chapter 1: The Beginning"
+  tokenIndex: number;  // 0-based position in the tokenized stream
+}
+
 export interface ReadingText {
   id: string;                       // UUID v4
   title: string;
@@ -39,6 +44,7 @@ export interface ReadingText {
   currentTokenIndex: number;
   isCompleted: boolean;
   completedAt?: number;
+  chapters?: ChapterMarker[];       // optional chapter offsets for navigation
 }
 
 /**

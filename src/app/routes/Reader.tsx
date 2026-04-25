@@ -38,7 +38,14 @@ export default function Reader() {
     );
   }
 
-  return <ReaderView tokens={tokens} textId={text.id} startIndex={text.currentTokenIndex} />;
+  return (
+    <ReaderView
+      tokens={tokens}
+      textId={text.id}
+      startIndex={text.currentTokenIndex}
+      {...(text.chapters && text.chapters.length > 0 ? { chapters: text.chapters } : {})}
+    />
+  );
 }
 
 interface ErrorSurfaceProps {

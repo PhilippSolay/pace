@@ -89,19 +89,28 @@ function PdfImportFlow(): JSX.Element {
     setIsSlow(false);
     const slowTimer = window.setTimeout(() => setIsSlow(true), SLOW_PARSE_MS);
     try {
-      const [pdfModule, cleanModule] = await Promise.all([
+      const [pdfModule, cleanModule, chaptersModule] = await Promise.all([
         import('@/core/text-processing/pdf'),
         import('@/core/text-processing/clean'),
+        import('@/core/text-processing/chapters'),
       ]);
-      const raw = await pdfModule.extractText(file);
+      const extracted = await pdfModule.extractText(file);
       setState('cleaning');
-      const cleaned = cleanModule.cleanText(raw);
+      const cleaned = cleanModule.cleanText(extracted.text);
       if (cleanModule.isLikelyScanned(cleaned)) {
         setState('error-scanned');
         return;
       }
-      const title = file.name.replace(/\.pdf$/iu, '') || 'Untitled';
-      const text = await createText({ title, content: cleaned, sourceType: 'pdf' });
+      const fallbackTitle = file.name.replace(/\.pdf$/iu, '') || 'Untitled';
+      const title = extracted.title ?? fallbackTitle;
+      const chapters = chaptersModule.detectChapters(cleaned);
+      const text = await createText({
+        title,
+        content: cleaned,
+        sourceType: 'pdf',
+        ...(extracted.author ? { author: extracted.author } : {}),
+        ...(chapters.length > 0 ? { chapters } : {}),
+      });
       setState('success');
       window.setTimeout(
         () => navigate(`/reader/${text.id}`, { replace: true }),
